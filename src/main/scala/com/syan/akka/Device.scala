@@ -10,7 +10,7 @@ object Device {
   final case class TemperatureRecorded(requestId: Long)
 
   final case class ReadTemperature(requestId: Long)
-  final case class ResponseTemperature(requestId: Long, value: Option[Double])
+  final case class RespondTemperature(requestId: Long, value: Option[Double])
 
   final case class RequestTrackDevice(groupId: String, deviceId: String)
   case object DeviceRegistered
@@ -40,6 +40,6 @@ class Device(groupId: String, deviceId: String) extends Actor with ActorLogging 
       sender() ! TemperatureRecorded(id)
 
     case ReadTemperature(id) =>
-      sender() ! ResponseTemperature(id, lastTemperatureReading)
+      sender() ! RespondTemperature(id, lastTemperatureReading)
   }
 }

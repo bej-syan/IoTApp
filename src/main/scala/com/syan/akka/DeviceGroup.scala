@@ -1,7 +1,7 @@
 package com.syan.akka
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
-import com.syan.akka.DeviceGroup.{ReplyDeviceList, RequestDeviceList}
+import com.syan.akka.DeviceGroup.{ReplyDeviceList, RequestAllTemperatures, RequestDeviceList}
 
 object DeviceGroup {
   def props(groupId: String): Props = Props(new DeviceGroup(groupId))
@@ -22,6 +22,7 @@ object DeviceGroup {
 class DeviceGroup(groupId: String) extends Actor with ActorLogging {
   var deviceIdToActor = Map.empty[String, ActorRef]
   var actorToDeviceId = Map.empty[ActorRef, String]
+  var nextCollectionId = 0L
 
   override def preStart(): Unit = log.info(s"DeviceGroup $groupId started")
 
@@ -45,6 +46,14 @@ class DeviceGroup(groupId: String) extends Actor with ActorLogging {
     case RequestTrackDevice(groupId, deviceId) =>
       log.warning(
         s"Ignoring TrackDevice request for $groupId. This actor is responsible for ${this.groupId}.")
+
+    case RequestAllTemperatures(requestId) =>
+      context.actorOf(DeviceGroupQuery.props(
+        actorToDeviceId = actorToDeviceId,
+        requestId = requestId,
+        requester = sender(),
+        3.seconds
+      ))
 
     case RequestDeviceList(requestId) =>
       sender() ! ReplyDeviceList(requestId, deviceIdToActor.keySet)
